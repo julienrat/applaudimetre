@@ -39,6 +39,8 @@ Un avertissement de sécurité peut apparaître sur le téléphone (certificat a
 2. Dans les paramètres du dépôt, activer GitHub Pages sur la branche principale.
 3. La page sera disponible sur `https://<user>.github.io/<repo>/`.
 
+Lien direct pour ce projet : `https://julienrat.github.io/applaudimetre/`
+
 ## Notes ℹ️
 
 - dBFS = niveau numérique (pas dB SPL).
