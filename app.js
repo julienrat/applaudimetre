@@ -1,3 +1,5 @@
+const APP_VERSION = "0.1.0";
+
 const startBtn = document.getElementById("startBtn");
 const stopBtn = document.getElementById("stopBtn");
 const barFill = document.getElementById("barFill");
@@ -19,6 +21,7 @@ const fullscreenBtn = document.getElementById("fullscreenBtn");
 const exitFullscreenBtn = document.getElementById("exitFullscreenBtn");
 const scoreValueEl = document.getElementById("scoreValue");
 const meterEl = document.getElementById("meter");
+const versionTagEl = document.getElementById("versionTag");
 const needleGroupEl = document.getElementById("needleGroup");
 const needleArcEl = document.querySelector(".needle-arc");
 const needleValueEl = document.getElementById("needleValue");
@@ -253,6 +256,10 @@ if (fullscreenBtn) {
 }
 if (exitFullscreenBtn) {
   exitFullscreenBtn.addEventListener("click", toggleFullscreen);
+}
+
+if (versionTagEl) {
+  versionTagEl.textContent = `v${APP_VERSION}`;
 }
 
 document.addEventListener("fullscreenchange", () => {

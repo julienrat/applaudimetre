@@ -231,6 +231,13 @@ button.is-active {
   height: auto;
 }
 
+.version {
+  margin-top: -6px;
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+  color: #9fb1c8;
+}
+
 .view {
   display: none;
 }
