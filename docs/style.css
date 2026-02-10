@@ -54,6 +54,14 @@ p {
   flex-wrap: wrap;
 }
 
+.mode-row {
+  margin-top: 10px;
+}
+
+.fullscreen-only {
+  display: none;
+}
+
 button {
   background: linear-gradient(135deg, #22d3ee, #10b981);
   color: #062018;
@@ -74,6 +82,11 @@ button.secondary {
   background: #1e2e44;
   color: var(--text);
   border: 1px solid rgba(255,255,255,0.08);
+}
+
+button.is-active {
+  background: linear-gradient(135deg, #fde047, #f97316);
+  color: #1a1407;
 }
 
 .meter {
@@ -98,6 +111,69 @@ button.secondary {
   width: 0%;
   background: linear-gradient(90deg, #22d3ee, #34d399, #facc15, #fb7185);
   transition: width 80ms linear;
+}
+
+.range-wrap {
+  position: relative;
+  margin-top: 10px;
+  height: 28px;
+}
+
+.range-track {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 6px;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.08);
+  border-radius: 999px;
+}
+
+.range-selected {
+  position: absolute;
+  top: 50%;
+  height: 6px;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, #22d3ee, #34d399, #facc15, #fb7185);
+  border-radius: 999px;
+}
+
+.range {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  width: 100%;
+  height: 28px;
+  background: none;
+  pointer-events: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #f8fafc;
+  border: 2px solid #0b1624;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #f8fafc;
+  border: 2px solid #0b1624;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  pointer-events: auto;
+  cursor: pointer;
 }
 
 .stats {
@@ -153,4 +229,166 @@ button.secondary {
   display: block;
   width: 100%;
   height: auto;
+}
+
+.view {
+  display: none;
+}
+
+.meter[data-tab="gauge"] .view-gauge {
+  display: block;
+}
+
+.meter[data-tab="needle"] .view-needle {
+  display: block;
+}
+
+.meter[data-tab="score"] .view-score {
+  display: flex;
+}
+
+.view-score {
+  min-height: 260px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.score-label {
+  font-size: 1rem;
+  color: var(--muted);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.score-value {
+  font-size: clamp(56px, 16vw, 180px);
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #f8fafc;
+  text-shadow: 0 10px 30px rgba(0,0,0,0.35);
+}
+
+.score-sub {
+  font-size: 0.95rem;
+  color: #9fb1c8;
+}
+
+body.fullscreen .app {
+  width: 100vw;
+  height: 100vh;
+  border-radius: 0;
+  padding: 8px 12px;
+}
+
+body.fullscreen .score-value {
+  font-size: clamp(160px, 40vw, 520px);
+}
+
+body.fullscreen .meter {
+  height: calc(100vh - 56px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+body.fullscreen .bar {
+  height: min(12vh, 120px);
+}
+
+body.fullscreen .mode-row {
+  display: none;
+}
+
+body.fullscreen .fullscreen-only {
+  display: flex;
+}
+
+body.fullscreen .score-sub,
+body.fullscreen .score-label,
+body.fullscreen .stats,
+body.fullscreen .hint,
+body.fullscreen .info,
+body.fullscreen .status {
+  display: none;
+}
+
+body.fullscreen h1,
+body.fullscreen p,
+body.fullscreen .logo,
+body.fullscreen .row:not(.fullscreen-only) {
+  display: none;
+}
+
+body.fullscreen .meter {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.needle-wrap {
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  width: 100%;
+  justify-items: center;
+}
+
+.needle-svg {
+  width: min(70vw, 520px);
+  height: auto;
+}
+
+.needle-arc-bg {
+  fill: none;
+  stroke: rgba(255,255,255,0.12);
+  stroke-width: 16;
+  stroke-linecap: round;
+}
+
+.needle-arc {
+  fill: none;
+  stroke: url(#arcGrad);
+  stroke-width: 16;
+  stroke-linecap: round;
+  stroke-dasharray: 376;
+  stroke-dashoffset: 376;
+}
+
+.needle-group line {
+  stroke: #f8fafc;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.needle-group circle {
+  fill: #f8fafc;
+}
+
+.needle-group {
+  transform-origin: 150px 150px;
+  transform: rotate(-90deg);
+}
+
+.needle-value {
+  font-size: clamp(48px, 10vw, 120px);
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+body.fullscreen .needle-svg {
+  width: 96vw;
+  height: 70vh;
+}
+
+body.fullscreen .needle-value {
+  font-size: clamp(140px, 32vw, 360px);
+}
+.display-value {
+  font-size: clamp(56px, 12vw, 140px);
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #f8fafc;
+  text-align: center;
 }

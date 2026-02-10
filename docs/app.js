@@ -1,14 +1,27 @@
 const startBtn = document.getElementById("startBtn");
 const stopBtn = document.getElementById("stopBtn");
 const barFill = document.getElementById("barFill");
-const peakMark = document.getElementById("peakMark");
+const rangeSelectedEl = document.getElementById("rangeSelected");
 const levelEl = document.getElementById("level");
 const dbEl = document.getElementById("db");
 const peakEl = document.getElementById("peak");
 const statusEl = document.getElementById("status");
 const sensitivityEl = document.getElementById("sensitivity");
+const gainValueEl = document.getElementById("gainValue");
+const floorEl = document.getElementById("floor");
+const ceilingEl = document.getElementById("ceiling");
 const weightingEl = document.getElementById("weighting");
 const peakHoldEl = document.getElementById("peakHold");
+const tabGaugeBtn = document.getElementById("tabGauge");
+const tabNeedleBtn = document.getElementById("tabNeedle");
+const tabScoreBtn = document.getElementById("tabScore");
+const fullscreenBtn = document.getElementById("fullscreenBtn");
+const exitFullscreenBtn = document.getElementById("exitFullscreenBtn");
+const scoreValueEl = document.getElementById("scoreValue");
+const meterEl = document.getElementById("meter");
+const needleGroupEl = document.getElementById("needleGroup");
+const needleArcEl = document.querySelector(".needle-arc");
+const needleValueEl = document.getElementById("needleValue");
 
 let audioCtx = null;
 let analyser = null;
@@ -21,6 +34,8 @@ let smoothed = 0;
 let peak = 0;
 let peakTimer = 0;
 let useFloat = true;
+let scoreSmooth = 0;
+let lastPercent = 0;
 
 function setStatus(text, strongText) {
   statusEl.innerHTML = `Statut: <strong>${strongText}</strong> ${text ? "- " + text : ""}`;
@@ -43,7 +58,9 @@ function rmsFromTimeDomain(buffer, isFloat) {
 }
 
 function timeConstant() {
-  return weightingEl.value === "slow" ? 1.0 : 0.125;
+  if (weightingEl.value === "slow") return 1.0;
+  if (weightingEl.value === "long") return 2.0;
+  return 0.125;
 }
 
 function updateMeter() {
@@ -59,7 +76,8 @@ function updateMeter() {
 
   const rms = rmsFromTimeDomain(dataArray, useFloat);
   const gain = parseFloat(sensitivityEl.value);
-  const target = Math.min(1, rms * gain * 2.0);
+  if (gainValueEl) gainValueEl.textContent = gain.toFixed(1);
+  const target = Math.min(1, rms * gain * 4.0);
 
   const tau = timeConstant();
   const alpha = Math.exp(-dt / tau);
@@ -78,18 +96,61 @@ function updateMeter() {
   }
   peak = Math.min(1, Math.max(0, peak));
 
-  const percent = Math.round(smoothed * 100);
-  barFill.style.width = `${percent}%`;
-  levelEl.textContent = percent.toString();
+  const floor = parseFloat(floorEl.value);
+  const ceiling = parseFloat(ceilingEl.value);
+  const raw = smoothed * 100;
+  const scaled = (raw - floor) / Math.max(1, (ceiling - floor));
+  const percent = Math.round(Math.max(0, Math.min(1, scaled)) * 100);
+  lastPercent = percent;
+
+  const rawPercent = Math.round(Math.max(0, Math.min(100, raw)));
+  barFill.style.width = `${rawPercent}%`;
+  levelEl.textContent = rawPercent.toString();
+
+  const scoreTau = 0.6;
+  const scoreAlpha = Math.exp(-dt / scoreTau);
+  scoreSmooth = scoreAlpha * scoreSmooth + (1 - scoreAlpha) * percent;
+  scoreValueEl.textContent = Math.round(scoreSmooth).toString();
+  if (needleGroupEl) {
+    const angle = -90 + (percent * 1.8);
+    needleGroupEl.style.transform = `rotate(${angle}deg)`;
+  }
+  if (needleArcEl) {
+    const total = 376;
+    needleArcEl.style.strokeDashoffset = `${total - (total * (percent / 100))}`;
+  }
+  if (needleValueEl) {
+    needleValueEl.textContent = percent.toString();
+  }
 
   const db = rms > 0 ? (20 * Math.log10(rms)).toFixed(1) : "-∞";
   dbEl.textContent = db.toString();
 
-  const peakPercent = Math.max(0, Math.min(100, Math.round(peak * 100)));
+  const peakRaw = peak * 100;
+  const peakScaled = (peakRaw - floor) / Math.max(1, (ceiling - floor));
+  const peakPercent = Math.max(0, Math.min(100, Math.round(peakScaled * 100)));
   peakEl.textContent = peakPercent.toString();
-  peakMark.style.left = `calc(${peakPercent}% - 1px)`;
 
   rafId = requestAnimationFrame(updateMeter);
+}
+
+function updateRangeUI() {
+  let minVal = parseFloat(floorEl.value);
+  let maxVal = parseFloat(ceilingEl.value);
+  if (minVal > maxVal - 1) {
+    minVal = maxVal - 1;
+    floorEl.value = minVal.toString();
+  }
+  if (maxVal < minVal + 1) {
+    maxVal = minVal + 1;
+    ceilingEl.value = maxVal.toString();
+  }
+  const minPct = (minVal / 100) * 100;
+  const maxPct = (maxVal / 100) * 100;
+  rangeSelectedEl.style.left = `${minPct}%`;
+  rangeSelectedEl.style.width = `${maxPct - minPct}%`;
+  scoreSmooth = lastPercent;
+  scoreValueEl.textContent = Math.round(lastPercent).toString();
 }
 
 async function start() {
@@ -142,7 +203,11 @@ function stop() {
   levelEl.textContent = "0";
   dbEl.textContent = "-∞";
   peakEl.textContent = "0";
-  peakMark.style.left = "0%";
+  scoreValueEl.textContent = "0";
+  scoreSmooth = 0;
+  if (needleGroupEl) needleGroupEl.style.transform = "rotate(-90deg)";
+  if (needleArcEl) needleArcEl.style.strokeDashoffset = "376";
+  if (needleValueEl) needleValueEl.textContent = "0";
   setStatus("", "En attente");
   startBtn.disabled = false;
   stopBtn.disabled = true;
@@ -150,6 +215,49 @@ function stop() {
 
 startBtn.addEventListener("click", start);
 stopBtn.addEventListener("click", stop);
+
+floorEl.addEventListener("input", updateRangeUI);
+ceilingEl.addEventListener("input", updateRangeUI);
+sensitivityEl.addEventListener("input", () => {
+  if (gainValueEl) gainValueEl.textContent = parseFloat(sensitivityEl.value).toFixed(1);
+});
+updateRangeUI();
+
+function setTab(tab) {
+  meterEl.setAttribute("data-tab", tab);
+  tabGaugeBtn.classList.toggle("is-active", tab === "gauge");
+  tabNeedleBtn.classList.toggle("is-active", tab === "needle");
+  tabScoreBtn.classList.toggle("is-active", tab === "score");
+}
+
+tabGaugeBtn.addEventListener("click", () => setTab("gauge"));
+tabNeedleBtn.addEventListener("click", () => setTab("needle"));
+tabScoreBtn.addEventListener("click", () => setTab("score"));
+
+async function toggleFullscreen() {
+  try {
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen();
+      document.body.classList.add("fullscreen");
+    } else {
+      await document.exitFullscreen();
+      document.body.classList.remove("fullscreen");
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+if (fullscreenBtn) {
+  fullscreenBtn.addEventListener("click", toggleFullscreen);
+}
+if (exitFullscreenBtn) {
+  exitFullscreenBtn.addEventListener("click", toggleFullscreen);
+}
+
+document.addEventListener("fullscreenchange", () => {
+  document.body.classList.toggle("fullscreen", Boolean(document.fullscreenElement));
+});
 
 // Sécurité si l'onglet est masqué
 document.addEventListener("visibilitychange", () => {

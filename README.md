@@ -63,3 +63,6 @@ Lien direct pour ce projet : `https://julienrat.github.io/applaudimetre/`
 - Envoyer le niveau sonore en temps réel (lissé) vers l'ESP32.
 - Allumer une barre NeoPixel en fonction du niveau.
 - Tester latence et stabilité sur mobile.
+
+---
+CC BY-SA — Julien Rat — Les Petits Débrouillards — 2026

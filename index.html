@@ -18,46 +18,88 @@
       <button id="startBtn">Activer le micro</button>
       <button id="stopBtn" class="secondary" disabled>Arrêter</button>
     </div>
+    <div class="row mode-row">
+      <button id="tabGauge" class="secondary is-active">Onglet jauge</button>
+      <button id="tabNeedle" class="secondary">Onglet aiguille</button>
+      <button id="tabScore" class="secondary">Onglet score</button>
+      <button id="fullscreenBtn" class="secondary">Plein écran</button>
+    </div>
+    <div class="row mode-row fullscreen-only">
+      <button id="exitFullscreenBtn" class="secondary">Revenir</button>
+    </div>
 
-    <section class="meter">
-      <div class="bar" aria-label="Niveau sonore">
-        <div class="bar-fill" id="barFill"></div>
-        <div id="peakMark" style="position:absolute; top:-2px; width:2px; height:calc(var(--bar-h) + 4px); background:#e2e8f0; opacity:0.8;"></div>
+    <section class="meter" id="meter" data-tab="gauge">
+      <div class="view view-gauge">
+        <div class="bar" aria-label="Niveau sonore">
+          <div class="bar-fill" id="barFill"></div>
+        </div>
+        <div class="range-wrap" aria-label="Réglage niveau bas et max">
+          <input id="floor" class="range range-min" type="range" min="0" max="100" step="1" value="6" />
+          <input id="ceiling" class="range range-max" type="range" min="0" max="100" step="1" value="85" />
+          <div class="range-track"></div>
+          <div class="range-selected" id="rangeSelected"></div>
+        </div>
+        <div class="stats">
+          <div class="pill">Niveau: <span id="level">0</span>%</div>
+          <div class="pill">dBFS (numérique): <span id="db">-∞</span></div>
+          <div class="pill">Pic: <span id="peak">0</span>%</div>
+        </div>
+        <div class="stats">
+          <label class="pill">
+            Gain <span id="gainValue">2.0</span>
+            <input id="sensitivity" type="range" min="0.5" max="8.0" step="0.1" value="2.0" />
+          </label>
+          <label class="pill">
+            Pondération
+            <select id="weighting">
+              <option value="fast" selected>Rapide (125 ms)</option>
+              <option value="slow">Lente (1 s)</option>
+              <option value="long">Moyenne longue (2 s)</option>
+            </select>
+          </label>
+          <label class="pill">
+            Maintien du pic
+            <select id="peakHold">
+              <option value="0.5">0,5 s</option>
+              <option value="1.0" selected>1 s</option>
+              <option value="2.0">2 s</option>
+            </select>
+          </label>
+        </div>
+        <div class="status" id="status">Statut: <strong>En attente</strong></div>
+        <div class="hint">Note: dBFS = niveau numérique (pas dB SPL). Les constantes « Rapide/Lente » sont 125 ms / 1 s.</div>
+        <div class="info" id="infoBox">
+          <strong>Termes</strong>
+          <div>• dBFS: niveau numérique du signal (0 dBFS = saturation).</div>
+          <div>• Pondération rapide/lente: lissage temporel de 125 ms / 1 s.</div>
+          <div>• Pic: valeur maximale récente, avec maintien avant décroissance.</div>
+          <div>• Sensibilité: amplifie visuellement le niveau pour la barre.</div>
+        </div>
       </div>
-      <div class="stats">
-        <div class="pill">Niveau: <span id="level">0</span>%</div>
-        <div class="pill">dBFS (numérique): <span id="db">-∞</span></div>
-        <div class="pill">Pic: <span id="peak">0</span>%</div>
+      <div class="view view-score" aria-label="Score d'applaudissement">
+        <div class="score-label">Score</div>
+        <div class="score-value" id="scoreValue">0</div>
+        <div class="score-sub">Niveau moyen pondéré</div>
       </div>
-      <div class="stats">
-        <label class="pill">
-          Sensibilité
-          <input id="sensitivity" type="range" min="0.6" max="3.0" step="0.1" value="1.6" />
-        </label>
-        <label class="pill">
-          Pondération
-          <select id="weighting">
-            <option value="fast" selected>Rapide (125 ms)</option>
-            <option value="slow">Lente (1 s)</option>
-          </select>
-        </label>
-        <label class="pill">
-          Maintien du pic
-          <select id="peakHold">
-            <option value="0.5">0,5 s</option>
-            <option value="1.0" selected>1 s</option>
-            <option value="2.0">2 s</option>
-          </select>
-        </label>
-      </div>
-      <div class="status" id="status">Statut: <strong>En attente</strong></div>
-      <div class="hint">Note: dBFS = niveau numérique (pas dB SPL). Les constantes « Rapide/Lente » sont 125 ms / 1 s.</div>
-      <div class="info" id="infoBox">
-        <strong>Termes</strong>
-        <div>• dBFS: niveau numérique du signal (0 dBFS = saturation).</div>
-        <div>• Pondération rapide/lente: lissage temporel de 125 ms / 1 s.</div>
-        <div>• Pic: valeur maximale récente, avec maintien avant décroissance.</div>
-        <div>• Sensibilité: amplifie visuellement le niveau pour la barre.</div>
+      <div class="view view-needle" aria-label="Jauge à aiguille">
+        <div class="needle-wrap">
+          <svg class="needle-svg" viewBox="0 0 300 170" aria-hidden="true">
+            <defs>
+              <linearGradient id="arcGrad" x1="0" x2="1">
+                <stop offset="0%" stop-color="#22d3ee"/>
+                <stop offset="50%" stop-color="#facc15"/>
+                <stop offset="100%" stop-color="#fb7185"/>
+              </linearGradient>
+            </defs>
+            <path class="needle-arc-bg" d="M 30 150 A 120 120 0 0 1 270 150" />
+            <path class="needle-arc" d="M 30 150 A 120 120 0 0 1 270 150" />
+            <g id="needleGroup" class="needle-group">
+              <line x1="150" y1="150" x2="150" y2="45" />
+              <circle cx="150" cy="150" r="8" />
+            </g>
+          </svg>
+          <div class="needle-value" id="needleValue">0</div>
+        </div>
       </div>
     </section>
   </main>
