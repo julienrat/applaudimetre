@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Applaudimètre</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <div class="logo" aria-hidden="true">
+      <img src="https://www.centre-sciences.org/sites/default/files/media/image/2024-06/Logo_PetitsDebrouillards-CVL_HD.jpg" alt="" />
+    </div>
+    <h1>Applaudimètre Mobile</h1>
+    <p>Active le micro puis fais du bruit : la barre monte selon le niveau sonore moyen (pondération temporelle type sonomètre).</p>
+
+    <div class="row">
+      <button id="startBtn">Activer le micro</button>
+      <button id="stopBtn" class="secondary" disabled>Arrêter</button>
+    </div>
+
+    <section class="meter">
+      <div class="bar" aria-label="Niveau sonore">
+        <div class="bar-fill" id="barFill"></div>
+        <div id="peakMark" style="position:absolute; top:-2px; width:2px; height:calc(var(--bar-h) + 4px); background:#e2e8f0; opacity:0.8;"></div>
+      </div>
+      <div class="stats">
+        <div class="pill">Niveau: <span id="level">0</span>%</div>
+        <div class="pill">dBFS (numérique): <span id="db">-∞</span></div>
+        <div class="pill">Pic: <span id="peak">0</span>%</div>
+      </div>
+      <div class="stats">
+        <label class="pill">
+          Sensibilité
+          <input id="sensitivity" type="range" min="0.6" max="3.0" step="0.1" value="1.6" />
+        </label>
+        <label class="pill">
+          Pondération
+          <select id="weighting">
+            <option value="fast" selected>Rapide (125 ms)</option>
+            <option value="slow">Lente (1 s)</option>
+          </select>
+        </label>
+        <label class="pill">
+          Maintien du pic
+          <select id="peakHold">
+            <option value="0.5">0,5 s</option>
+            <option value="1.0" selected>1 s</option>
+            <option value="2.0">2 s</option>
+          </select>
+        </label>
+      </div>
+      <div class="status" id="status">Statut: <strong>En attente</strong></div>
+      <div class="hint">Note: dBFS = niveau numérique (pas dB SPL). Les constantes « Rapide/Lente » sont 125 ms / 1 s.</div>
+      <div class="info" id="infoBox">
+        <strong>Termes</strong>
+        <div>• dBFS: niveau numérique du signal (0 dBFS = saturation).</div>
+        <div>• Pondération rapide/lente: lissage temporel de 125 ms / 1 s.</div>
+        <div>• Pic: valeur maximale récente, avec maintien avant décroissance.</div>
+        <div>• Sensibilité: amplifie visuellement le niveau pour la barre.</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
