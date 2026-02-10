@@ -1,6 +1,6 @@
 # Applaudimètre (web) 🎤📊
 
-[Page en ligne](https://julienrat.github.io/applaudimetre/)
+<a href="https://julienrat.github.io/applaudimetre/" target="_blank" rel="noopener noreferrer">Page démo (GitHub Pages)</a>
 
 Page web qui mesure le niveau sonore via le micro du téléphone et affiche une barre colorée avec lissage type sonomètre (pondération rapide/lente) et maintien du pic. Prévue pour une future connexion Web Bluetooth à un ESP32.
 
