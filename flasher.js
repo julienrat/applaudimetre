@@ -28,7 +28,15 @@ async function connectPort() {
     port = await navigator.serial.requestPort();
     await port.open({ baudRate: 115200 });
     transport = new Transport(port);
-    esp = new ESPLoader({ transport, baudrate: 115200, terminal: { writeln: () => {} } });
+    esp = new ESPLoader({
+      transport,
+      baudrate: 115200,
+      terminal: {
+        clean: () => {},
+        write: () => {},
+        writeln: () => {},
+      },
+    });
     await esp.main();
     flashStatus.textContent = "Flash: connecte";
     if (!firmwareBin) await loadFirmware();
