@@ -33,7 +33,6 @@ async function connectPort() {
       return;
     }
     port = await navigator.serial.requestPort();
-    await port.open({ baudRate: 115200 });
     transport = new Transport(port);
     const terminal = {
       clean: () => {},
