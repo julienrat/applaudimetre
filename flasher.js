@@ -31,9 +31,14 @@ async function connectPort() {
     const terminal = {
       clean: () => {},
       write: () => {},
-      writeln: () => {},
+      writeLine: () => {},
     };
-    esp = new ESPLoader(transport, 115200, terminal);
+    esp = new ESPLoader({
+      transport,
+      baudrate: 115200,
+      romBaudrate: 115200,
+      terminal,
+    });
     await esp.main();
     flashStatus.textContent = "Flash: connecte";
     if (!firmwareBin) await loadFirmware();
