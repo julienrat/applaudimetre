@@ -14,7 +14,7 @@ const floorEl = document.getElementById("floor");
 const ceilingEl = document.getElementById("ceiling");
 const weightingEl = document.getElementById("weighting");
 const peakHoldEl = document.getElementById("peakHold");
-const tabGaugeBtn = document.getElementById("tabGauge");
+const tabConfigBtn = document.getElementById("tabConfig");
 const tabNeedleBtn = document.getElementById("tabNeedle");
 const tabScoreBtn = document.getElementById("tabScore");
 const fullscreenBtn = document.getElementById("fullscreenBtn");
@@ -28,6 +28,11 @@ const needleValueEl = document.getElementById("needleValue");
 const bleConnectBtn = document.getElementById("bleConnectBtn");
 const bleDisconnectBtn = document.getElementById("bleDisconnectBtn");
 const bleStatusEl = document.getElementById("bleStatus");
+const cfgLedCountEl = document.getElementById("cfgLedCount");
+const cfgLedPinEl = document.getElementById("cfgLedPin");
+const cfgLedReverseEl = document.getElementById("cfgLedReverse");
+const cfgSaveBtn = document.getElementById("cfgSaveBtn");
+const cfgStatusEl = document.getElementById("cfgStatus");
 
 let audioCtx = null;
 let analyser = null;
@@ -45,12 +50,14 @@ let lastPercent = 0;
 let bleDevice = null;
 let bleServer = null;
 let bleTxChar = null;
+let bleCfgChar = null;
 let bleLastSend = 0;
 let bleLastValue = -1;
 
 // Nordic UART Service (NUS) UUIDs - widely supported on ESP32
 const BLE_SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 const BLE_RX_CHAR_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"; // write
+const BLE_CFG_CHAR_UUID = "6e400004-b5a3-f393-e0a9-e50e24dcca9e"; // config read/write/notify
 
 function setStatus(text, strongText) {
   statusEl.innerHTML = `Statut: <strong>${strongText}</strong> ${text ? "- " + text : ""}`;
@@ -175,13 +182,18 @@ async function connectBle() {
   try {
     bleStatusEl.textContent = "BLE: connexion...";
     const device = await navigator.bluetooth.requestDevice({
-      filters: [{ services: [BLE_SERVICE_UUID] }],
+      filters: [{ namePrefix: "Applaudimetre", services: [BLE_SERVICE_UUID] }],
+      optionalServices: [BLE_SERVICE_UUID],
     });
     bleDevice = device;
     bleDevice.addEventListener("gattserverdisconnected", onBleDisconnected);
     bleServer = await bleDevice.gatt.connect();
     const service = await bleServer.getPrimaryService(BLE_SERVICE_UUID);
     bleTxChar = await service.getCharacteristic(BLE_RX_CHAR_UUID);
+    bleCfgChar = await service.getCharacteristic(BLE_CFG_CHAR_UUID);
+    await bleCfgChar.startNotifications();
+    bleCfgChar.addEventListener("characteristicvaluechanged", onCfgNotification);
+    await readConfigFromBle();
     bleStatusEl.textContent = "BLE: connecté";
     bleConnectBtn.disabled = true;
     bleDisconnectBtn.disabled = false;
@@ -202,6 +214,7 @@ async function disconnectBle() {
 function onBleDisconnected() {
   bleServer = null;
   bleTxChar = null;
+  bleCfgChar = null;
   bleDevice = null;
   if (bleConnectBtn) bleConnectBtn.disabled = false;
   if (bleDisconnectBtn) bleDisconnectBtn.disabled = true;
@@ -219,6 +232,48 @@ function sendScoreOverBle(score) {
     console.error(err);
     if (bleStatusEl) bleStatusEl.textContent = "BLE: erreur d'envoi";
   });
+}
+
+function decodeConfig(view) {
+  if (view.byteLength < 3) return null;
+  const leds = view.getUint16(0, true);
+  const pin = view.getUint8(2);
+  const reverse = view.byteLength >= 4 ? (view.getUint8(3) & 0x01) : 0;
+  return { leds, pin, reverse };
+}
+
+function applyConfigToUi(cfg) {
+  if (!cfg) return;
+  cfgLedCountEl.value = String(cfg.leds);
+  cfgLedPinEl.value = String(cfg.pin);
+  cfgLedReverseEl.value = cfg.reverse ? "1" : "0";
+  if (cfgStatusEl) cfgStatusEl.textContent = `Config: ${cfg.leds} leds, pin ${cfg.pin}, sens ${cfg.reverse ? "inverse" : "normal"}`;
+}
+
+async function readConfigFromBle() {
+  if (!bleCfgChar) return;
+  const value = await bleCfgChar.readValue();
+  const cfg = decodeConfig(value);
+  applyConfigToUi(cfg);
+}
+
+function onCfgNotification(event) {
+  const cfg = decodeConfig(event.target.value);
+  applyConfigToUi(cfg);
+}
+
+async function saveConfigToBle() {
+  if (!bleCfgChar) return;
+  const leds = Math.max(1, Math.min(512, parseInt(cfgLedCountEl.value, 10) || 1));
+  const pin = Math.max(0, Math.min(48, parseInt(cfgLedPinEl.value, 10) || 0));
+  const reverse = cfgLedReverseEl.value === "1" ? 1 : 0;
+  const buffer = new ArrayBuffer(4);
+  const view = new DataView(buffer);
+  view.setUint16(0, leds, true);
+  view.setUint8(2, pin);
+  view.setUint8(3, reverse);
+  await bleCfgChar.writeValue(buffer);
+  if (cfgStatusEl) cfgStatusEl.textContent = "Config: enregistre";
 }
 
 async function start() {
@@ -296,15 +351,23 @@ if (bleConnectBtn && bleDisconnectBtn && bleStatusEl) {
   bleConnectBtn.addEventListener("click", connectBle);
   bleDisconnectBtn.addEventListener("click", disconnectBle);
 }
+if (cfgSaveBtn) {
+  cfgSaveBtn.addEventListener("click", () => {
+    saveConfigToBle().catch((err) => {
+      console.error(err);
+      if (cfgStatusEl) cfgStatusEl.textContent = "Config: erreur";
+    });
+  });
+}
 
 function setTab(tab) {
   meterEl.setAttribute("data-tab", tab);
-  tabGaugeBtn.classList.toggle("is-active", tab === "gauge");
+  tabConfigBtn.classList.toggle("is-active", tab === "config");
   tabNeedleBtn.classList.toggle("is-active", tab === "needle");
   tabScoreBtn.classList.toggle("is-active", tab === "score");
 }
 
-tabGaugeBtn.addEventListener("click", () => setTab("gauge"));
+tabConfigBtn.addEventListener("click", () => setTab("config"));
 tabNeedleBtn.addEventListener("click", () => setTab("needle"));
 tabScoreBtn.addEventListener("click", () => setTab("score"));
 
