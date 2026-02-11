@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Applaudimetre — Flasher ESP32</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="flasher.css" />
+</head>
+<body>
+  <main class="app">
+    <h1>Flasher ESP32</h1>
+    <p>Selectionne le modele, puis prepare le firmware via GitHub Actions, ensuite flashe via WebSerial.</p>
+
+    <section class="config-card">
+      <div class="config-title">Flash</div>
+      <div class="config-grid">
+        <div class="config-field">
+          <label for="fwSelect">Firmware</label>
+          <select id="fwSelect">
+            <option value="firmware/esp32devkitc-firmware.bin" selected>ESP32 DevKitC</option>
+            <option value="firmware/esp32-wroom-32-firmware.bin">ESP32 WROOM-32</option>
+            <option value="firmware/esp32-devkit-v1-firmware.bin">ESP32 DevKit V1</option>
+          </select>
+        </div>
+      </div>
+      <div class="config-actions">
+        <button id="btnConnect" class="secondary">Connecter port</button>
+        <button id="btnFlash" class="secondary" disabled>Flasher</button>
+        <div class="ble-status" id="flashStatus">Flash: --</div>
+      </div>
+      <div class="note">Le flash utilise WebSerial. Chrome/Edge requis.</div>
+    </section>
+  </main>
+
+  <script type="module" src="flasher.js"></script>
+</body>
+</html>
