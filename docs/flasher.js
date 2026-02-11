@@ -1,4 +1,9 @@
-import { ESPLoader, Transport } from "https://esm.sh/esptool-js@0.5.4";
+const ESPLoader = window.ESPLoader || (window.esptooljs && window.esptooljs.ESPLoader);
+const Transport = window.Transport || (window.esptooljs && window.esptooljs.Transport);
+
+if (!ESPLoader || !Transport) {
+  throw new Error("esptool-js bundle introuvable");
+}
 
 const fwSelect = document.getElementById("fwSelect");
 const btnConnect = document.getElementById("btnConnect");
