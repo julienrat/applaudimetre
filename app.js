@@ -25,6 +25,9 @@ const versionTagEl = document.getElementById("versionTag");
 const needleGroupEl = document.getElementById("needleGroup");
 const needleArcEl = document.querySelector(".needle-arc");
 const needleValueEl = document.getElementById("needleValue");
+const bleConnectBtn = document.getElementById("bleConnectBtn");
+const bleDisconnectBtn = document.getElementById("bleDisconnectBtn");
+const bleStatusEl = document.getElementById("bleStatus");
 
 let audioCtx = null;
 let analyser = null;
@@ -39,6 +42,15 @@ let peakTimer = 0;
 let useFloat = true;
 let scoreSmooth = 0;
 let lastPercent = 0;
+let bleDevice = null;
+let bleServer = null;
+let bleTxChar = null;
+let bleLastSend = 0;
+let bleLastValue = -1;
+
+// Nordic UART Service (NUS) UUIDs - widely supported on ESP32
+const BLE_SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+const BLE_RX_CHAR_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"; // write
 
 function setStatus(text, strongText) {
   statusEl.innerHTML = `Statut: <strong>${strongText}</strong> ${text ? "- " + text : ""}`;
@@ -113,7 +125,8 @@ function updateMeter() {
   const scoreTau = 0.6;
   const scoreAlpha = Math.exp(-dt / scoreTau);
   scoreSmooth = scoreAlpha * scoreSmooth + (1 - scoreAlpha) * percent;
-  scoreValueEl.textContent = Math.round(scoreSmooth).toString();
+  const scoreShown = Math.round(scoreSmooth);
+  scoreValueEl.textContent = scoreShown.toString();
   if (needleGroupEl) {
     const angle = -90 + (percent * 1.8);
     needleGroupEl.style.transform = `rotate(${angle}deg)`;
@@ -133,6 +146,8 @@ function updateMeter() {
   const peakScaled = (peakRaw - floor) / Math.max(1, (ceiling - floor));
   const peakPercent = Math.max(0, Math.min(100, Math.round(peakScaled * 100)));
   peakEl.textContent = peakPercent.toString();
+
+  sendScoreOverBle(scoreShown);
 
   rafId = requestAnimationFrame(updateMeter);
 }
@@ -154,6 +169,56 @@ function updateRangeUI() {
   rangeSelectedEl.style.width = `${maxPct - minPct}%`;
   scoreSmooth = lastPercent;
   scoreValueEl.textContent = Math.round(lastPercent).toString();
+}
+
+async function connectBle() {
+  try {
+    bleStatusEl.textContent = "BLE: connexion...";
+    const device = await navigator.bluetooth.requestDevice({
+      filters: [{ services: [BLE_SERVICE_UUID] }],
+    });
+    bleDevice = device;
+    bleDevice.addEventListener("gattserverdisconnected", onBleDisconnected);
+    bleServer = await bleDevice.gatt.connect();
+    const service = await bleServer.getPrimaryService(BLE_SERVICE_UUID);
+    bleTxChar = await service.getCharacteristic(BLE_RX_CHAR_UUID);
+    bleStatusEl.textContent = "BLE: connecté";
+    bleConnectBtn.disabled = true;
+    bleDisconnectBtn.disabled = false;
+  } catch (err) {
+    console.error(err);
+    bleStatusEl.textContent = "BLE: échec de connexion";
+  }
+}
+
+async function disconnectBle() {
+  if (bleDevice?.gatt?.connected) {
+    bleDevice.gatt.disconnect();
+  } else {
+    onBleDisconnected();
+  }
+}
+
+function onBleDisconnected() {
+  bleServer = null;
+  bleTxChar = null;
+  bleDevice = null;
+  if (bleConnectBtn) bleConnectBtn.disabled = false;
+  if (bleDisconnectBtn) bleDisconnectBtn.disabled = true;
+  if (bleStatusEl) bleStatusEl.textContent = "BLE: déconnecté";
+}
+
+function sendScoreOverBle(score) {
+  if (!bleTxChar) return;
+  const now = performance.now();
+  if (now - bleLastSend < 100 && score === bleLastValue) return;
+  bleLastSend = now;
+  bleLastValue = score;
+  const value = new Uint8Array([Math.max(0, Math.min(100, score))]);
+  bleTxChar.writeValueWithoutResponse(value).catch((err) => {
+    console.error(err);
+    if (bleStatusEl) bleStatusEl.textContent = "BLE: erreur d'envoi";
+  });
 }
 
 async function start() {
@@ -208,6 +273,7 @@ function stop() {
   peakEl.textContent = "0";
   scoreValueEl.textContent = "0";
   scoreSmooth = 0;
+  bleLastValue = -1;
   if (needleGroupEl) needleGroupEl.style.transform = "rotate(-90deg)";
   if (needleArcEl) needleArcEl.style.strokeDashoffset = "376";
   if (needleValueEl) needleValueEl.textContent = "0";
@@ -225,6 +291,11 @@ sensitivityEl.addEventListener("input", () => {
   if (gainValueEl) gainValueEl.textContent = parseFloat(sensitivityEl.value).toFixed(1);
 });
 updateRangeUI();
+
+if (bleConnectBtn && bleDisconnectBtn && bleStatusEl) {
+  bleConnectBtn.addEventListener("click", connectBle);
+  bleDisconnectBtn.addEventListener("click", disconnectBle);
+}
 
 function setTab(tab) {
   meterEl.setAttribute("data-tab", tab);
@@ -272,3 +343,8 @@ document.addEventListener("visibilitychange", () => {
     stop();
   }
 });
+
+if (!navigator.bluetooth && bleStatusEl) {
+  bleStatusEl.textContent = "BLE: non supporté";
+  if (bleConnectBtn) bleConnectBtn.disabled = true;
+}

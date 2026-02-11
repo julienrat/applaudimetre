@@ -199,6 +199,11 @@ button.is-active {
 
 .status strong { color: var(--text); }
 
+.ble-status {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .hint {
   margin-top: 12px;
   font-size: 0.9rem;
