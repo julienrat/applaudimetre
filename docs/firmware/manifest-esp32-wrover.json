@@ -5,7 +5,10 @@
     {
       "chipFamily": "ESP32",
       "parts": [
-        {"path": "esp32-wrover-firmware.bin", "offset": 0}
+        {"path": "esp32-wrover-bootloader.bin", "offset": 0},
+        {"path": "esp32-wrover-partitions.bin", "offset": 32768},
+        {"path": "esp32-wrover-boot_app0.bin", "offset": 57344},
+        {"path": "esp32-wrover-firmware.bin", "offset": 65536}
       ]
     }
   ]

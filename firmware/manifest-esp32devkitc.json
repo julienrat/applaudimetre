@@ -5,7 +5,10 @@
     {
       "chipFamily": "ESP32",
       "parts": [
-        {"path": "firmware/esp32devkitc-firmware.bin", "offset": 0}
+        {"path": "esp32devkitc-bootloader.bin", "offset": 0},
+        {"path": "esp32devkitc-partitions.bin", "offset": 32768},
+        {"path": "esp32devkitc-boot_app0.bin", "offset": 57344},
+        {"path": "esp32devkitc-firmware.bin", "offset": 65536}
       ]
     }
   ]
