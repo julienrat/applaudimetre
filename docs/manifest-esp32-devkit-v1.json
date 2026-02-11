@@ -1,0 +1,12 @@
+{
+  "name": "Applaudimetre",
+  "version": "0.1.0",
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        {"path": "firmware/esp32-devkit-v1-firmware.bin", "offset": 0}
+      ]
+    }
+  ]
+}

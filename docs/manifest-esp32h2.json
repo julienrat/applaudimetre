@@ -1,0 +1,12 @@
+{
+  "name": "Applaudimetre",
+  "version": "0.1.0",
+  "builds": [
+    {
+      "chipFamily": "ESP32-H2",
+      "parts": [
+        {"path": "firmware/esp32h2-firmware.bin", "offset": 0}
+      ]
+    }
+  ]
+}
