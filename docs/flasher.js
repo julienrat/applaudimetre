@@ -10,6 +10,11 @@ let transport = null;
 let esp = null;
 let firmwareBin = null;
 
+if (!("serial" in navigator)) {
+  flashStatus.textContent = "Flash: WebSerial indisponible (Chrome/Edge requis)";
+  btnConnect.disabled = true;
+}
+
 async function loadFirmware() {
   const url = fwSelect.value;
   const res = await fetch(url);
