@@ -9,6 +9,7 @@ let port = null;
 let transport = null;
 let esp = null;
 let firmwareBin = null;
+let connecting = false;
 
 if (!("serial" in navigator)) {
   flashStatus.textContent = "Flash: WebSerial indisponible (Chrome/Edge requis)";
@@ -25,6 +26,12 @@ async function loadFirmware() {
 
 async function connectPort() {
   try {
+    if (connecting) return;
+    connecting = true;
+    if (port && port.readable) {
+      flashStatus.textContent = "Flash: port deja ouvert";
+      return;
+    }
     port = await navigator.serial.requestPort();
     await port.open({ baudRate: 115200 });
     transport = new Transport(port);
@@ -46,6 +53,8 @@ async function connectPort() {
   } catch (err) {
     console.error(err);
     flashStatus.textContent = "Flash: erreur";
+  } finally {
+    connecting = false;
   }
 }
 
