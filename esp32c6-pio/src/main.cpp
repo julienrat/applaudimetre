@@ -3,7 +3,7 @@
 #include <Preferences.h>
 #include <Adafruit_NeoPixel.h>
 
-static const char* DEVICE_NAME = "Applaudimetre-ESP32H2";
+static const char* DEVICE_NAME = "Applaudimetre-ESP32";
 
 // Nordic UART Service (NUS)
 static const char* SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
