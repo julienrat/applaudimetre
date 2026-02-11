@@ -1,4 +1,4 @@
-import { ESPLoader, Transport } from "https://unpkg.com/esptool-js@0.5.4/lib/index.js";
+import { ESPLoader, Transport } from "https://esm.sh/esptool-js@0.5.4";
 
 const fwSelect = document.getElementById("fwSelect");
 const btnConnect = document.getElementById("btnConnect");
@@ -20,7 +20,7 @@ async function loadFirmware() {
   const url = fwSelect.value;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Firmware ${res.status}`);
-  firmwareBin = new Uint8Array(await res.arrayBuffer());
+  firmwareBin = await res.arrayBuffer();
   btnFlash.disabled = !port;
 }
 
