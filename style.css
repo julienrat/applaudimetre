@@ -84,6 +84,12 @@ button.secondary {
   border: 1px solid rgba(255,255,255,0.08);
 }
 
+.btn-danger {
+  background: linear-gradient(135deg, #fb7185, #ef4444);
+  color: #2b0a0a;
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
 .link-btn {
   display: inline-flex;
   align-items: center;
